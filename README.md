@@ -39,6 +39,11 @@ tinyml_security/
 │   ├── fig3_whitebox_vs_transfer_pgd.png    # Gradient masking overlay
 │   ├── dos_fig1_avg_latency.png    # DoS flood test latency
 │   └── dos_fig4_sustained.png    # Sustained load bar chart
+├── models/    # Trained and quantised model files
+│   ├── baseline.tflite    # FP32 baseline (1,402 KB)
+│   ├── ptq_model.tflite    # PTQ int8 model (366 KB)
+│   ├── qat_model.tflite    # QAT int8 model (366 KB)
+│   ├── binary_model.tflite    # Binary float32 model (1,402 KB)
 │
 └── README.md    # This file
 ```
@@ -107,7 +112,7 @@ Run this cell and authorise access when prompted.
 At the top of each notebook, set:
 
 ```python
-PROJECT_DIR = '/content/drive/MyDrive/tinyml-quant-security'
+PROJECT_DIR = '/content/drive/MyDrive/tinyml_project'
 ```
 
 Change this path to match where you have stored the project on your Google Drive.
