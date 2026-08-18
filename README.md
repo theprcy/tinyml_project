@@ -229,8 +229,6 @@ Try: `ping your_pi_address` if still not working, check the power connection.
 Try to install: `pip3 install ai-edge-litert --break-system-packages` 
 
 ## Key parameters I used in this project
-
-## Key Experimental Parameters
 |Parameter|Value|
 |---|---|
 |Dataset|CIFAR-10 (60,000 images, 10 classes)|
