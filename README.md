@@ -1,6 +1,8 @@
 # Developer Guide
 **Project** Evaluating the Security Impact of Quantisation on TinyML Models Against Adversarial and Denial of Service Attacks
+
 **Name:** Purichaya Punnasri
+
 **Student Number:** 220306029
 
 ## 1. Project Overview
@@ -8,6 +10,7 @@ Evaluates how three quantisation methods: Post-Training Quantisation (PTQ), Quan
 
 The working pipeline is split across two hardware environments:
 1. Google Colaboratory with a T4 GPU: model training (unquantised Full-Point 32 (FP32) model), three quantised variants (PTQ, QAT, binary), adversarial evaluation (Fast Gradient Sign Method (FGSM) and Projected Gradient Descent (PGD))
+   
 2. RPi 4B and RPi 5: hardware deployment, DoS testing, and inference time delay measurement
 
 ## 2. Github Repository Structure
@@ -39,6 +42,7 @@ tinyml_security/
 ## 3. Requirements being running any files
 
 #### Google Colab
+
 - All colab notebook run on Google Colab with a T4 GPU. The following libraries are used in each notebook:
 ```
 tensorflow 2.20
@@ -59,7 +63,9 @@ pillow
 ```
 ## 4. Google Colab Set up
 4.1. Open the Google Colab: sign in using your Google account
+
 4.2. Set runtime to T4 GPU
+
 4.3. Mount Google Drive
 ```
 from google.colab import drive
@@ -80,6 +86,7 @@ PROJECT_DIR = '/content/drive/Mydrive/tinyml_project'
 |`adversarial.py`|ASR results|
 
 4.6. Transfer TFLite model files to RPis
+
 Saves all files locally, then copy them to RPis using `scp` command: 
 ```bash
 scp ~/location_of_your_file_locally/baseline.tflite your_pi_address:~/tinyml_project/models/
@@ -87,11 +94,15 @@ scp ~/location_of_your_file_locally/ptq_model.tflite your_pi_address:~/tinyml_pr
 scp ~/location_of_your_file_locally/qat_model.tflite your_pi_address:~/tinyml_project/models/
 scp ~/location_of_your_file_locally/binary_model.tflite your_pi_address:~/tinyml_project/models/
 ```
+
 Redo above `scp` commands with both RPi 4B and RPi 5 (Don't forget to change the address between 2 RPis)
 
 ## 5. Raspberry Pi Setup
+
 These steps apply to both RPi 4B and RPi 5
+
 5.1. Find the RPi's IP address
+
 On your command prompt or terminal:
 `arp-a` or `ssh admin@raspberrypi.local` (if you have costumed your hostname, use that instead)
 
@@ -111,6 +122,7 @@ pip3 install ai-edge-litert --break-system-packages
 pip3 install numpy psutill matplotlib pillow --break-system-packages
 ```
 5.5. Copy the scripts to RPis
+
 From your command prompt/ terminal:
 ```bash
 scp pi_scripts/pi_model_utils.py your_pi_address:~/tinyml_project/
@@ -122,7 +134,9 @@ scp pi_scripts/run_demo.py your_pi_address:~/tinyml_project/
 ```
 
 5.6. Set up the VNC remote monitor
+
 VNC is require in this project only for running the visual demo. Personally, I used Screen5:VNC Remote Desktop and RealVNC Connect Viewer -- either of them works fine.
+
 ```bash
 # install VNC server and desktop
 sudo apt-get install realvnc-vnc-server lightdm lightdm-gtk-greeter lxde --yes
@@ -140,7 +154,9 @@ sudo systemctl start lightdm
 Then, connect your monitor to each RPi's address.
 
 ## 6. Running the experiments
+
 6.1. Measure the inference time delay
+
 - ssh to RPi and run:
 ```bash
 cd ~/tinyml_project
@@ -158,6 +174,7 @@ Binary    xx.xx      xx.xx      xx.xx
 ```
 
 6.2. Run DoS Flood Test and sustained load
+
 Start the resource monitor in the background first then run the DoS test:
 ```bash
 cd ~/tinyml_project
@@ -176,14 +193,18 @@ results/monitor_log.csv
 **Note:** The full DoS run takes around 40-45 minutes to complete. Don't close the terminal while it's running.
 
 6.3. Copy the results back to your local computer
+
 Using this following `scp` command:
 ```bash
 scp -r your_pi_hostname@your_pi_address:~tinyml_project/results/ ~/your_local_computer_location
 ```
 
 ## 7. Running the live demo
+
 The demo scripts required VNC to be running, so please connect the VNC before proceeding. Use LXterminal on VNC to run the demo.
+
 Option A - Visual Demo only (This run classifies one image from each of the CIFAR-10 classes using all 4 models and display the result's prediction)
+
 Open LXterminal on Pi Desktop via VNC to run:
 ```bash
 cd ~/tinyml_project
@@ -196,10 +217,12 @@ DISPLAY=:0 python3 run_demo.py
 ```
 This runs 4 parts: 
 1. Model file size measurement
+
 2. Inference time delay measurement
+
 3. Visual inference demo
-4. DoS test (*Note:* this is a short version of the full DoS run)
-5. 
+
+4. DoS test (*Note:* this is a short version of the full DoS run) 
 
 ## 8. Result file explanation
 |File|Explanation|
@@ -211,9 +234,11 @@ This runs 4 parts:
 
 ## 9. Debugging/ Troubleshooting
 #### ImportError: cannot import name 'ImageTk' from 'PIL'
+
 To solve, try: `pip3 install pillow --upgrade --break-system-packages`
 
 #### VNC shows blank screen or fails to connect
+
 To solve, try:
 ```bash
 sudo systemctl restart lightdm
