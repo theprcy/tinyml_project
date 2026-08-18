@@ -1,402 +1,252 @@
 # Developer Guide
-
-**Project:** Evaluating the Security Impact of Quantisation on TinyML Models Against Adversarial and Denial-of-Service Attacks  
+**Project** Evaluating the Security Impact of Quantisation on TinyML Models Against Adversarial and Denial of Service Attacks
+**Name:** Purichaya Punnasri
+**Student Number:** 220306029
 
 ## 1. Project Overview
+Evaluates how three quantisation methods: Post-Training Quantisation (PTQ), Quantisation-Aware Training (QAT), and binary quantisation, affect the security of a TinyML model deployed on the Raspberry Pi 4B (RPi 4B) and Raspberry Pi 5 (RPi 5).
 
-This project evaluates how three quantisation methods: Post-Training Quantisation (PTQ), Quantisation-Aware Training (QAT), and binary quantisation, affect the security of a TinyML model deployed on the Raspberry Pi 4B and Raspberry Pi 5.
-
-The pipeline is split across two hardware environments:
-
-- **Google Colaboratory (T4 GPU):** model training, quantisation, adversarial evaluation
-- **Raspberry Pi 4B and Raspberry Pi 5:** hardware deployment, DoS testing, inference timing
-
----
+The working pipeline is split across two hardware environments:
+1. Google Colaboratory with a T4 GPU: model training (unquantised Full-Point 32 (FP32) model), three quantised variants (PTQ, QAT, binary), adversarial evaluation (Fast Gradient Sign Method (FGSM) and Projected Gradient Descent (PGD))
+2. RPi 4B and RPi 5: hardware deployment, DoS testing, and inference time delay measurement
 
 ## 2. Github Repository Structure
-
 ```
 tinyml_security/
-│
-├── colab_notebook/    # Google Colab notebooks
-│   ├── baseline_training.py    # Train FP32 baseline CNN
-│   ├── ptq.py    # Post-Training Quantisation
-│   ├── qat.py    # Quantisation-Aware Training
-│   ├── binary.py    # Binary quantisation
-│   ├── adversarial_attack_evaluation.py    # FGSM and PGD adversarial evaluation
-│
-├── pi_scripts/  # Raspberry Pi deployment scripts
-│   ├── pi_model_utils.py    # TFLite model loader utility
-│   ├── resource_monitor.py    # CPU and memory logger
-│   ├── run_dos_test.py    # DoS flood and sustained load test
-│   ├── measure_time_delay.py    # Inference time delay measurement
-│   ├── demo_visual.py    # Visual inference demo
-│   └── run_demo.py    # Master demo script (4 parts)
-│
-├── figures/    # Generated result figures
-│   ├── fig1_whitebox_asr.png    # White-box ASR results
-│   ├── fig2_transfer_asr.png    # Transfer ASR results
-│   ├── fig3_whitebox_vs_transfer_pgd.png    # Gradient masking overlay
-│   ├── dos_fig1_avg_latency.png    # DoS flood test latency
-│   └── dos_fig4_sustained.png    # Sustained load bar chart
-├── models/    # Trained and quantised model files
-│   ├── baseline.tflite    # FP32 baseline (1,402 KB)
-│   ├── ptq_model.tflite    # PTQ int8 model (366 KB)
-│   ├── qat_model.tflite    # QAT int8 model (366 KB)
-│   ├── binary_model.tflite    # Binary float32 model (1,402 KB)
-│
-└── README.md    # This file
+|
+|-- colab_notebook/ # Google Colab notebooks
+|  |-- baseline_training.py # train the unquantised FP32 baseline CNN
+|  |-- ptq.py # post-training quantisation
+|  |-- qat.py # quantisation-aware training quantisation
+|  |-- binary.py # binary quantisation
+|  |-- adversarial_attack_evaluation.py # FGSM and PGD evaluation
+|
+|-- pi_scripts/ # the scripts on the RPis
+|  |-- pi_model_utils.py # TFLite model loader utility file
+|  |-- resource_monitor.py # cpu and memory logger
+|  |-- run_dos_test.py # dos flood and sustained load testing
+|  |-- measure_time_delay.py # inference time delay measurement
+|  |-- demo_visual.py # visual inference demo
+|  |-- run_demo.py # full demo scripts (4-part demo)
+|
+|-- models/ # trained and quantised model files
+|  |-- baseline.tflite # unquantised FP32 baseline
+|  |-- ptq_model.tflite # ptq int 8 model
+|  |-- qat_model.tflite # qat int 8 model
+|  |-- binary_model.tflite # binary float32 model
+|__ Readme.md # this file showing the developer guide
 ```
+## 3. Requirements being running any files
 
----
-
-## 3. Requirements
-
-### Google Colab
-
-All Colab notebooks run on Google Colaboratory with a T4 GPU runtime. No local installation is required. The following libraries are used and installed within each notebook:
-
+#### Google Colab
+- All colab notebook run on Google Colab with a T4 GPU. The following libraries are used in each notebook:
 ```
-tensorflow==2.20
-keras==3.x
+tensorflow 2.20
+keras 3.x
 numpy
 matplotlib
 adversarial-robustness-toolbox (ART)
 ```
-
-### Raspberry Pi 4B and Raspberry Pi 5
-
-| Component | Specification |
-|---|---|
-| OS | Debian GNU/Linux 13 (Trixie) 64-bit |
-| Python | 3.13 |
-| Inference runtime | ai-edge-litert 1.0.1 |
-
-Required Python packages:
+#### RPis
 
 ```
-ai-edge-litert
+python 3.13
+ai-edge-litert 1.0.1 # for the inference runtime
 numpy
-psutil
+plutil
 matplotlib
 pillow
 ```
-
----
-
-## 4. Google Colab Setup
-
-### Step 1 — Open Google Colab
-
-Go to [https://colab.research.google.com](https://colab.research.google.com) and sign in with a Google account.
-
-### Step 2 — Set runtime to GPU
-
+## 4. Google Colab Set up
+4.1. Open the Google Colab: sign in using your Google account
+4.2. Set runtime to T4 GPU
+4.3. Mount Google Drive
 ```
-Runtime → Change runtime type → T4 GPU → Save
-```
-
-### Step 3 — Mount Google Drive
-
-Each notebook begins with:
-
-```python
 from google.colab import drive
 drive.mount('/content/drive')
 ```
-
-Run this cell and authorise access when prompted.
-
-### Step 4 — Set the project directory
-
-At the top of each notebook, set:
-
+4.4. Set the project directory
 ```python
-PROJECT_DIR = '/content/drive/MyDrive/tinyml_project'
+PROJECT_DIR = '/content/drive/Mydrive/tinyml_project'
 ```
+4.5. Run the following files in order
+   
+|Notebook|Output|
+|---|---|
+|`baseline_training.py`|`baseline.keras`, `baseline.tflite`|
+|`ptq.py`|`ptq_model.tflite`|
+|`qat.py`|`qat_model.tflite`|
+|`binary.py`|`binary_model.tflite`, `binary_packed.npz`|
+|`adversarial.py`|ASR results|
 
-Change this path to match where you have stored the project on your Google Drive.
-
-### Step 5 — Run the notebooks in order
-
-Run the notebooks in the following order. Each notebook depends on the outputs of the previous one.
-
-| Order | Notebook | Output |
-|---|---|---|
-| 1 | `baseline_training.ipynb` | `baseline.keras`, `baseline.tflite` |
-| 2 | `ptq.ipynb` | `ptq_model.tflite` |
-| 3 | `qat.ipynb` | `qat_model.tflite` |
-| 4 | `binary.ipynb` | `binary_model.tflite`, `binary_packed.npz` |
-| 5 | `adversarial.ipynb` | ASR results, adversarial figures |
-
-> **Important:** Always run all cells from top to bottom in each notebook. Do not skip cells.
-
-### Step 6 — Transfer model files to Raspberry Pi
-
-Once all four `.tflite` files are saved to Google Drive, download them to your Mac and copy them to the Pi using `scp`:
-
+4.6. Transfer TFLite model files to RPis
+Saves all files locally, then copy them to RPis using `scp` command: 
 ```bash
-scp ~/Downloads/baseline.tflite admin@172.20.10.3:~/tinyml_project/models/
-scp ~/Downloads/ptq_model.tflite admin@172.20.10.3:~/tinyml_project/models/
-scp ~/Downloads/qat_model.tflite admin@172.20.10.3:~/tinyml_project/models/
-scp ~/Downloads/binary_model.tflite admin@172.20.10.3:~/tinyml_project/models/
+scp ~/location_of_your_file_locally/baseline.tflite your_pi_address:~/tinyml_project/models/
+scp ~/location_of_your_file_locally/ptq_model.tflite your_pi_address:~/tinyml_project/models/
+scp ~/location_of_your_file_locally/qat_model.tflite your_pi_address:~/tinyml_project/models/
+scp ~/location_of_your_file_locally/binary_model.tflite your_pi_address:~/tinyml_project/models/
 ```
-
-Replace `172.20.10.3` with your RPi 4B IP address and `172.20.10.2` with your RPi 5 IP address.
-
----
+Redo above `scp` commands with both RPi 4B and RPi 5 (Don't forget to change the address between 2 RPis)
 
 ## 5. Raspberry Pi Setup
+These steps apply to both RPi 4B and RPi 5
+5.1. Find the RPi's IP address
+On your command prompt or terminal:
+`arp-a` or `ssh admin@raspberrypi.local` (if you have costumed your hostname, use that instead)
 
-These steps apply to both RPi 4B and RPi 5 unless stated otherwise.
+5.2. SSH into the RPi
+`ssh admin@raspberrypi.local`
 
-### Step 1 — Find the Pi's IP address
-
-On your Mac terminal:
-
-```bash
-arp -a
-```
-
-Look for the device at `172.20.10.x`. In this project:
-- RPi 4B: `172.20.10.3`
-- RPi 5: `172.20.10.2`
-
-### Step 2 — SSH into the Pi
-
-```bash
-ssh admin@172.20.10.3   # RPi 4B
-ssh admin@172.20.10.2   # RPi 5
-```
-
-### Step 3 — Create the project directory
-
+5.3. Create the project directory
 ```bash
 mkdir -p ~/tinyml_project/models
 mkdir -p ~/tinyml_project/results
 mkdir -p ~/tinyml_project/demo_outputs
 ```
 
-### Step 4 — Install required packages
-
+5.4. Install required packages
 ```bash
 pip3 install ai-edge-litert --break-system-packages
-pip3 install numpy psutil matplotlib pillow --break-system-packages
+pip3 install numpy psutill matplotlib pillow --break-system-packages
+```
+5.5. Copy the scripts to RPis
+From your command prompt/ terminal:
+```bash
+scp pi_scripts/pi_model_utils.py your_pi_address:~/tinyml_project/
+scp pi_scripts/resource_monitor.py your_pi_address:~/tinyml_project/
+scp pi_scripts/run_dos_test.py your_pi_address:~/tinyml_project/
+scp pi_scripts/measure_time_delay.py your_pi_address:~/tinyml_project/
+scp pi_scripts/demo_visual.py your_pi_address:~/tinyml_project/
+scp pi_scripts/run_demo.py your_pi_address:~/tinyml_project/
 ```
 
-### Step 5 — Copy scripts to the Pi
-
-From your Mac terminal:
-
+5.6. Set up the VNC remote monitor
+VNC is require in this project only for running the visual demo. Personally, I used Screen5:VNC Remote Desktop and RealVNC Connect Viewer -- either of them works fine.
 ```bash
-scp pi_scripts/pi_model_utils.py admin@172.20.10.3:~/tinyml_project/
-scp pi_scripts/resource_monitor.py admin@172.20.10.3:~/tinyml_project/
-scp pi_scripts/run_dos_test.py admin@172.20.10.3:~/tinyml_project/
-scp pi_scripts/measure_time_delay.py admin@172.20.10.3:~/tinyml_project/
-scp pi_scripts/demo_visual.py admin@172.20.10.3:~/tinyml_project/
-scp pi_scripts/run_demo.py admin@172.20.10.3:~/tinyml_project/
-```
-
-### Step 6 — Set up VNC (for visual demo only)
-
-VNC is required only for running the visual demo. It is not needed for DoS testing or time delay measurement.
-
-```bash
-# Install VNC server and desktop
+# install VNC server and desktop
 sudo apt-get install realvnc-vnc-server lightdm lightdm-gtk-greeter lxde --yes
 
-# Fix lightdm configuration
+# to fix lightdm configuration
 sudo sed -i 's/user-session=rpd-labwc/user-session=LXDE/' /etc/lightdm/lightdm.conf
 sudo sed -i 's/greeter-session=lightdm-gtk-greeter-labwc/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf
-sudo sed -i 's/autologin-session=rpd-labwc/autologin-session=LXDE/' /etc/lightdm/lightdm.conf
+sudo sed -i 's/autologin-session=rpd-labwc/aitplogin-session=LXDE/' /etc/lightdm/lightdm.conf
 
-# Start services
+# to start the service
 sudo systemctl enable vncserver-x11-serviced
 sudo systemctl start vncserver-x11-serviced
 sudo systemctl start lightdm
 ```
+Then, connect your monitor to each RPi's address.
 
-Connect from your Mac using RealVNC Viewer to the Pi's IP address.
-
----
-
-## 6. Running the Experiments
-
-### 6.1 Measure Inference Time Delay
-
-SSH into the Pi and run:
-
+## 6. Running the experiments
+6.1. Measure the inference time delay
+- ssh to RPi and run:
 ```bash
 cd ~/tinyml_project
 python3 measure_time_delay.py
 ```
+and the results is saved to `results/pi_time_delay.csv`
 
-This runs 500 inferences per model using a fixed test image (seed 42) and saves results to:
-
+The expected results:
 ```
-results/pi_time_delay.csv
-```
-
-Expected output:
-
-```
-Model      Avg (ms)    P95 (ms)    Size (KB)
-FP32       2.415       2.564       1402.0
-PTQ        1.612       1.658       365.6
-QAT        1.614       1.660       365.6
-Binary     2.378       2.454       1402.0
+Model    Avg(ms)    P95(ms)    Size(KB)
+FP32      xx.xx      xx.xx      xx.xx
+PTQ       xx.xx      xx.xx      xx.xx
+QAT       xx.xx      xx.xx      xx.xx
+Binary    xx.xx      xx.xx      xx.xx
 ```
 
-### 6.2 Run DoS Flood Test and Sustained Load
-
-Start the resource monitor in the background first, then run the DoS test:
-
+6.2. Run DoS Flood Test and sustained load
+Start the resource monitor in the background first then run the DoS test:
 ```bash
 cd ~/tinyml_project
 
-# Start CPU and memory monitor in background
+# start cpu and memory monitor in the background
 python3 resource_monitor.py results/monitor_log.csv &
-
 # Run DoS test
 python3 run_dos_test.py
 ```
-
-This runs both the flood test (concurrency levels 1, 5, 10, 25, 50, 100 for 30 seconds each) and the sustained load test (300 seconds single-threaded). Results are saved to:
-
+The results are saved to
 ```
 results/dos_flood_results.csv
 results/dos_sustained_results.csv
 results/monitor_log.csv
 ```
+**Note:** The full DoS run takes around 40-45 minutes to complete. Don't close the terminal while it's running.
 
-> **Note:** The full DoS test takes approximately 40 minutes to complete. Do not close the terminal while it is running.
-
-### 6.3 Copy Results Back to Mac
-
+6.3. Copy the results back to your local computer
+Using this following `scp` command:
 ```bash
-# From your Mac terminal:
-scp -r admin@172.20.10.3:~/tinyml_project/results/ ~/Downloads/rpi4_results/
-scp -r admin@172.20.10.2:~/tinyml_project/results/ ~/Downloads/rpi5_results/
+scp -r your_pi_hostname@your_pi_address:~tinyml_project/results/ ~/your_local_computer_location
 ```
 
----
-
-## 7. Running the Demo
-
-The demo requires VNC to be running. Connect via RealVNC Viewer before proceeding.
-
-### Option A — Visual Demo Only
-
-Open a terminal on the Pi desktop via VNC and run:
-
+## 7. Running the live demo
+The demo scripts required VNC to be running, so please connect the VNC before proceeding. Use LXterminal on VNC to run the demo.
+Option A - Visual Demo only (This run classifies one image from each of the CIFAR-10 classes using all 4 models and display the result's prediction)
+Open LXterminal on Pi Desktop via VNC to run:
 ```bash
 cd ~/tinyml_project
 DISPLAY=:0 python3 demo_visual.py
 ```
-
-This classifies one image from each of the 10 CIFAR-10 classes using all four models and displays the results visually.
-
-### Option B — Full Demo (Parts 1 to 3)
-
+Option B - Full demo (There are 4 parts)
 ```bash
 cd ~/tinyml_project
 DISPLAY=:0 python3 run_demo.py
 ```
+This runs 4 parts: 
+1. Model file size measurement
+2. Inference time delay measurement
+3. Visual inference demo
+4. DoS test (*Note:* this is a short version of the full DoS run)
+5. 
 
-This runs:
-- **Part 1:** Model file sizes and loading
-- **Part 2:** Inference time delay measurement
-- **Part 3:** Visual inference demo
-
-> **Note:** Part 4 (DoS test) is included in `run_demo.py` but is skipped for demo recording purposes as it takes 40 minutes. To run Parts 1 to 3 only, comment out `run_part4()` at the bottom of `run_demo.py`.
-
-### Faster Demo for Recording
-
-To show fewer images during recording, edit `run_demo.py` and change the number of classes from 10 to 4:
-
-```python
-# Find:
-for class_idx in range(10):
-
-# Change to:
-for class_idx in range(4):
-```
-
----
-
-## 8. Results Files
-
-| File | Contents |
+## 8. Result file explanation
+|File|Explanation|
 |---|---|
-| `pi4_pi_time_delay.csv` | RPi 4B: avg delay, P95, min, max per model |
-| `pi4_dos_flood_results.csv` | RPi 4B: avg delay per concurrency level |
-| `pi4_dos_sustained_results.csv` | RPi 4B: avg delay, P95, requests in 300s |
-| `pi4_monitor_log.csv` | RPi 4B: CPU%, memory%, memory_used_mb every 0.5s |
-| `pi5_pi_time_delay.csv` | RPi 5: same as above |
-| `pi5_dos_flood_results.csv` | RPi 5: same as above |
-| `pi5_dos_sustained_results.csv` | RPi 5: same as above |
-| `pi5_monitor_log_rpi5.csv` | RPi 5: same as above |
+|`pi_time_delay.csv`|avg delay, P95 delay, min delay, max delay per model|
+|`dos_flood_results.csv`|avg delay per concurrency level|
+|`dos_sustained_results.csv`|avg delay, P95 delay, no. of requests in 300s|
+|`monitor_log.csv`|CPU usage(%), memory usage (%), memory_used_mb every 0.5 s|
 
----
+## 9. Debugging/ Troubleshooting
+#### ImportError: cannot import name 'ImageTk' from 'PIL'
+To solve, try: `pip3 install pillow --upgrade --break-system-packages`
 
-## 9. Troubleshooting/ debugging
-
-### ImportError: cannot import name 'ImageTk' from 'PIL'
-
-```bash
-pip3 install pillow --upgrade --break-system-packages
-```
-
-### RuntimeError: main thread is not in main loop
-
-This is a harmless tkinter cleanup error during the DoS test. It does not affect results. To suppress it, add at the top of `run_demo.py`:
-
-```python
-import warnings
-warnings.filterwarnings('ignore')
-```
-
-### VNC shows blank screen or fails to connect
-
+#### VNC shows blank screen or fails to connect
+To solve, try:
 ```bash
 sudo systemctl restart lightdm
 sleep 5
 sudo ls /tmp/.X11-unix/
 ```
+If `X0` appears after running above code, try connecting again on VNC monitor.
 
-If `X0` appears, try connecting again via RealVNC Viewer.
+#### If RPi is not found 
+Try: `ping your_pi_address` if still not working, check the power connection.
 
-### Cannot connect to Pi via SSH
+#### If ai-edge-litert not found
+Try to install: `pip3 install ai-edge-litert --break-system-packages` 
 
-```bash
-# Check the Pi is on the network:
-ping 172.20.10.3
-
-# If no response, check the Pi is powered on and connected to the hotspot
-```
-
-### ai-edge-litert not found
-
-```bash
-pip3 install ai-edge-litert --break-system-packages
-```
+## Key parameters I used in this project
 
 ## Key Experimental Parameters
-
-| Parameter | Value |
+|Parameter|Value|
 |---|---|
-| Dataset | CIFAR-10 (60,000 images, 10 classes) |
-| Train / Val / Test split | 45,000 / 5,000 / 10,000 |
-| Random seed | 42 (all experiments) |
-| PTQ calibration samples | 300 (from training set) |
-| QAT fine-tune epochs | 15 (early stop patience 6) |
-| Binary fine-tune epochs | 25 (early stop patience 8) |
-| Fine-tune learning rate | 1e-4 |
-| Attack tool | Adversarial Robustness Toolbox (ART) |
-| Attack sample size | 1,000 images (seed 42) |
-| Epsilon values | 0.01, 0.0314, 0.05, 0.1 |
-| PGD iterations | 20 |
-| PGD step size | epsilon / 4 |
-| DoS concurrency levels | 1, 5, 10, 25, 50, 100 |
-| Flood stage duration | 30 seconds per level |
-| Sustained load duration | 300 seconds |
+|Dataset|CIFAR-10 (60,000 images, 10 classes)|
+|Train/ Val/ Test Split| 45,000/ 5,000/ 10,000 respectively|
+|Random Seed| 42 (for all experiments)|
+|PTQ calibration samples| 300 (from training set)|
+|QAT fine-tune epochs| 15 (early stop patience 6)|
+|Binary fine-tune epochs| 25 (early stop patience 8)|
+|Fine-tune learning rate| 1e-4|
+|Attack Tool| Adversarial Robustness Toolbox (ART)|
+|Attack Sample Size| 1,000 images (seed 42)|
+|Epsilon values (perturbed strengths)|0.01, 0.0314(8/255), 0.05, 0.1|
+|PGD iterations| 20|
+|PGD step size| epsilon/4|
+|DoS concurrency levels| 1,5,10,25,50,100|
+|Flood stage duration| 30 seconds per level|
+|Sustained load duration| 300 seconds|
+
+## End of Developer Guide
