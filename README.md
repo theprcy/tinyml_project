@@ -14,11 +14,17 @@ The working pipeline is split across two hardware environments:
 tinyml_security/
 |
 |-- colab_notebook/ # Google Colab notebooks
-|  |-- baseline_training.py # train the unquantised FP32 baseline CNN
-|  |-- ptq.py # post-training quantisation
-|  |-- qat.py # quantisation-aware training quantisation
-|  |-- binary.py # binary quantisation
-|  |-- adversarial_attack_evaluation.py # FGSM and PGD evaluation
+|  |-- baseline_training.ipynb # train the unquantised FP32 baseline CNN
+|  |-- ptq.ipynb # post-training quantisation
+|  |-- qat.ipynb # quantisation-aware training quantisation
+|  |-- binary_float32.ipynb # binary quantisation with float 32 weight
+|  |-- adversarial_attack_evaluation.ipynb # FGSM and PGD evaluation
+|  |-- binary_bit_pack.ipynb # this is an experiment to do bit packing for binary quantisation
+|  |-- baseline_training.py (backup if you can't open the .ipynb file)
+|  |-- ptq.py (backup if you can't open the .ipynb file)
+|  |-- qat.py (backup if you can't open the .ipynb file)
+|  |-- binary_float32.py (backup if you can't open the .ipynb file)
+|  |-- adversarial_attack_evaluation.py (backup if you can't open the .ipynb file)
 |
 |-- pi_scripts/ # the scripts on the RPis
 |  |-- pi_model_utils.py # TFLite model loader utility file
@@ -75,11 +81,12 @@ PROJECT_DIR = '/content/drive/Mydrive/tinyml_project'
    
 |Notebook|Output|
 |---|---|
-|`baseline_training.py`|`baseline.keras`, `baseline.tflite`|
-|`ptq.py`|`ptq_model.tflite`|
-|`qat.py`|`qat_model.tflite`|
-|`binary.py`|`binary_model.tflite`, `binary_packed.npz`|
-|`adversarial.py`|ASR results|
+|`baseline.ipynb`|`baseline.keras`, `baseline.tflite`|
+|`ptq.ipynb`|`ptq_model.tflite`|
+|`qat.ipynb`|`qat_model.tflite`|
+|`binary_float32.ipynb`|`binary_model.tflite`, `binary_packed.npz`|
+|`adversarial_attack_evaluation.ipynb`|ASR results|
+|`binary_bit_pack.ipynb`|.npz file (Note that this file is for experiment and .npz can't be deployed on RPi)|
 
 4.6. Transfer TFLite model files to RPis
 
