@@ -14,13 +14,13 @@ The working pipeline is split across two hardware environments:
 tinyml_security/
 |
 |-- colab_notebook/ # Google Colab notebooks
-|  |-- baseline_training.ipynb # train the unquantised FP32 baseline CNN
+|  |-- baseline.ipynb # train the unquantised FP32 baseline CNN
 |  |-- ptq.ipynb # post-training quantisation
 |  |-- qat.ipynb # quantisation-aware training quantisation
 |  |-- binary_float32.ipynb # binary quantisation with float 32 weight
 |  |-- adversarial_attack_evaluation.ipynb # FGSM and PGD evaluation
 |  |-- binary_bit_pack.ipynb # this is an experiment to do bit packing for binary quantisation
-|  |-- baseline_training.py (backup if you can't open the .ipynb file)
+|  |-- baseline.py (backup if you can't open the .ipynb file)
 |  |-- ptq.py (backup if you can't open the .ipynb file)
 |  |-- qat.py (backup if you can't open the .ipynb file)
 |  |-- binary_float32.py (backup if you can't open the .ipynb file)
