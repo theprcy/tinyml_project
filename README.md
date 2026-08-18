@@ -1,10 +1,6 @@
 # Developer Guide
 **Project** Evaluating the Security Impact of Quantisation on TinyML Models Against Adversarial and Denial of Service Attacks
 
-**Name:** Purichaya Punnasri
-
-**Student Number:** 220306029
-
 ## 1. Project Overview
 Evaluates how three quantisation methods: Post-Training Quantisation (PTQ), Quantisation-Aware Training (QAT), and binary quantisation, affect the security of a TinyML model deployed on the Raspberry Pi 4B (RPi 4B) and Raspberry Pi 5 (RPi 5).
 
